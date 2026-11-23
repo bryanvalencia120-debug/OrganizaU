@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrganizaU</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<section id="login">
+  <form class="lcard" onsubmit="return A.entrar(event)">
+    <div class="cap">🎓</div><h1>OrganizaU</h1><p>Organización académica inteligente</p>
+    <div class="tabs"><button type="button" id="tIn" class="on" onclick="A.modo('in')">Iniciar sesión</button><button type="button" id="tReg" onclick="A.modo('reg')">Registrarme</button></div>
+    <input name="u" placeholder="Usuario" required autocomplete="username">
+    <input name="p" type="password" placeholder="Contraseña (mín. 4)" required minlength="4" autocomplete="current-password">
+    <button class="btn" id="lbtn">Entrar</button>
+    <small>Proyecto académico: los datos se guardan solo en este navegador.</small>
+  </form>
+</section>
+
+<div id="app" hidden>
+  <aside class="side">
+    <div class="logo"><div class="capi">🎓</div><h1>OrganizaU</h1></div>
+    <button class="nav" data-v="inicio" onclick="A.ir('inicio')">🏠 Inicio</button>
+    <button class="nav" data-v="calendario" onclick="A.ir('calendario')">📅 Calendario</button>
+    <button class="nav" data-v="horarios" onclick="A.ir('horarios')">🕒 Mis horarios</button>
+    <button class="nav" data-v="tareas" onclick="A.ir('tareas')">✅ Mis tareas</button>
+    <button class="nav" data-v="grupos" onclick="A.ir('grupos')">👥 Trabajos grupales</button>
+    <button class="nav" data-v="config" onclick="A.ir('config')">⚙️ Configuración</button>
+    <button class="nav salir" onclick="A.salir()">🚪 Cerrar sesión</button>
+  </aside>
+  <main>
+    <section class="hero">
+      <div><h2 id="saludo"></h2><p>Organiza tu tiempo, administra tus actividades y equilibra tu vida académica y laboral.</p></div>
+      <button class="avatar" id="av" onclick="A.ir('config')" aria-label="Configuración"></button>
+    </section>
+    <div class="wrap" id="vista"></div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script src="script.js"></script>
+</body>
+</html>
