@@ -687,3 +687,97 @@ main {
         transition: none !important;
     }
 }
+/* Columnas apiladas */
+.colv {
+    display: grid;
+    gap: 20px;
+    align-content: start;
+}
+
+/* Listas con barra de desplazamiento */
+.scroll {
+    max-height: min(60vh, 480px);
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 8px;
+}
+
+.scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+}
+
+/* Próximas actividades */
+.ag {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 8px;
+    border-top: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.ag:first-child {
+    border-top: 0;
+}
+
+.ag:hover {
+    background: color-mix(in srgb, var(--primary) 8%, var(--card));
+}
+
+.ag.sel {
+    background: color-mix(in srgb, var(--primary) 14%, var(--card));
+}
+
+.agh {
+    display: block;
+    font-weight: 700;
+    text-transform: capitalize;
+    margin-bottom: 6px;
+}
+
+.agi {
+    display: block;
+    font-size: 14px;
+    margin: 4px 0;
+}
+
+/* Formularios más espaciados */
+.fm.amplio {
+    gap: 16px;
+}
+
+/* Filtros de tareas */
+.filtros {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.filtros .chips {
+    margin-bottom: 0;
+}
+
+.filtros .fecha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filtros input[type=date] {
+    max-width: 190px;
+}
+
+.cuenta {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 6px;
+}
