@@ -104,6 +104,8 @@ let U, S;
 let vista = "inicio";
 let modo = "in";
 let filtro = "todas";
+let filtroF = "todas";   // filtro por fecha
+let fechaSel = "";       // fecha elegida en el buscador
 
 let selD = HOY;
 let mes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
@@ -359,68 +361,133 @@ V.calendario = () => {
         `;
     }
 
+    // Agenda: todas las actividades de los próximos 60 días
+    const agenda = [];
+
+    for (let i = 0; i <= 60; i++) {
+        const f = mas(i);
+        const it = items(f);
+
+        if (it.length) {
+            agenda.push({ f, n: i, it });
+        }
+    }
+
     return `
         <div class="grid2">
 
-            <section class="card">
+            <div class="colv">
 
-                <div class="head">
-                    <button class="mini" onclick="A.mes(-1)" aria-label="Mes anterior">‹</button>
+                <section class="card">
 
-                    <h3>${MESES[mo]} ${y}</h3>
+                    <div class="head">
+                        <button class="mini" onclick="A.mes(-1)" aria-label="Mes anterior">‹</button>
 
-                    <button class="mini" onclick="A.mes(1)" aria-label="Mes siguiente">›</button>
-                </div>
+                        <h3>${MESES[mo]} ${y}</h3>
 
-                <div class="cal">
-                    ${c}
-                </div>
+                        <button class="mini" onclick="A.mes(1)" aria-label="Mes siguiente">›</button>
+                    </div>
 
-                <p class="muted" style="margin-top:10px">
-                    Rojo = carga alta (${S.cfg.limite} o más actividades).
+                    <div class="cal">
+                        ${c}
+                    </div>
 
-                    <button class="chb" onclick="A.hoyb()">Ir a hoy</button>
-                </p>
+                    <p class="muted" style="margin-top:10px">
+                        Rojo = carga alta (${S.cfg.limite} o más actividades).
 
-            </section>
+                        <button class="chb" onclick="A.hoyb()">Ir a hoy</button>
+                    </p>
 
-            <section class="card">
+                </section>
 
-                <h3>${esc(bonita(selD))}</h3>
+                <section class="card">
 
-                <ul class="lista">
-                    ${L(items(selD), x => `
-                        <li>
-                            ${chip(x.tipo)}
+                    <h3>📌 Próximas actividades</h3>
 
-                            <div class="t">
-                                <b>${esc(x.t)}</b>
-                            </div>
+                    <p class="muted" style="margin-bottom:10px">
+                        Aquí ves todo lo que viene. Toca un día para ver su detalle.
+                    </p>
 
-                            ${x.i !== undefined
-                                ? `<button class="x" onclick="A.ad(${x.i})" aria-label="Eliminar">✕</button>`
-                                : ""}
-                        </li>
-                    `) || '<li class="vacio">Sin actividades este día.</li>'}
-                </ul>
+                    <div class="scroll">
 
-                <h3 style="margin-top:18px">➕ Agregar actividad</h3>
+                        ${L(agenda, g => `
+                            <button class="ag ${g.f === selD ? "sel" : ""}" onclick="A.dia('${g.f}')">
 
-                <form class="fm" onsubmit="return A.act(event)">
+                                <span class="agh">
+                                    ${g.n === 0 ? "Hoy · " : g.n === 1 ? "Mañana · " : ""}${esc(bonita(g.f))}
+                                </span>
 
-                    <input name="t" placeholder="Ej: Entrega de base de datos" required>
+                                ${L(g.it, x => `
+                                    <span class="agi">${chip(x.tipo)} ${esc(x.t)}</span>
+                                `)}
 
-                    <select name="tipo">
-                        ${opts(["Entrega", "Evaluación", "Reunión", "Personal"])}
-                    </select>
+                            </button>
+                        `) || '<p class="vacio">No tienes actividades próximas.</p>'}
 
-                    <input name="f" type="date" value="${selD}" required>
+                    </div>
 
-                    <button class="btn">Guardar</button>
+                </section>
 
-                </form>
+            </div>
 
-            </section>
+            <div class="colv">
+
+                <section class="card">
+
+                    <h3>${esc(bonita(selD))}</h3>
+
+                    <div class="scroll">
+
+                        <ul class="lista">
+                            ${L(items(selD), x => `
+                                <li>
+                                    ${chip(x.tipo)}
+
+                                    <div class="t">
+                                        <b>${esc(x.t)}</b>
+                                    </div>
+
+                                    ${x.i !== undefined
+                                        ? `<button class="x" onclick="A.ad(${x.i})" aria-label="Eliminar">✕</button>`
+                                        : ""}
+                                </li>
+                            `) || '<li class="vacio">Sin actividades este día.</li>'}
+                        </ul>
+
+                    </div>
+
+                </section>
+
+                <section class="card">
+
+                    <h3>➕ Agregar actividad</h3>
+
+                    <form class="fm amplio" onsubmit="return A.act(event)">
+
+                        <label>
+                            Nombre de la actividad
+                            <input name="t" placeholder="Ej: Entrega de base de datos" required>
+                        </label>
+
+                        <label>
+                            Tipo
+                            <select name="tipo">
+                                ${opts(["Entrega", "Evaluación", "Reunión", "Personal"])}
+                            </select>
+                        </label>
+
+                        <label>
+                            Fecha
+                            <input name="f" type="date" value="${selD}" required>
+                        </label>
+
+                        <button class="btn">Guardar actividad</button>
+
+                    </form>
+
+                </section>
+
+            </div>
 
         </div>
     `;
@@ -568,9 +635,17 @@ V.horarios = () => {
 
 V.tareas = () => {
 
+    // Filtro por fecha
+    const pasaFecha = x =>
+        filtroF === "todas" ||
+        (filtroF === "hoy" && x.f === HOY) ||
+        (filtroF === "semana" && x.f >= HOY && x.f <= mas(7)) ||
+        (filtroF === "vencidas" && x.f < HOY && !x.ok) ||
+        (filtroF === "fecha" && x.f === fechaSel);
+
     const l = S.tareas
         .map((x, i) => ({ x, i }))
-        .filter(({ x }) => filtro === "todas" || (filtro === "hechas") === x.ok)
+        .filter(({ x }) => (filtro === "todas" || (filtro === "hechas") === x.ok) && pasaFecha(x))
         .sort((a, b) => a.x.f.localeCompare(b.x.f));
 
     return `
@@ -580,7 +655,7 @@ V.tareas = () => {
 
                 <h3>➕ Nueva tarea</h3>
 
-                <form class="fm" onsubmit="return A.tarea(event)">
+                <form class="fm amplio" onsubmit="return A.tarea(event)">
 
                     <input name="t" placeholder="Título" required>
 
@@ -611,46 +686,74 @@ V.tareas = () => {
 
                 <h3>✅ Mis tareas</h3>
 
-                <div class="chips">
-                    ${L(["todas", "pendientes", "hechas"], v => `
-                        <button class="chb ${filtro === v ? "on" : ""}" onclick="A.fil('${v}')">
-                            ${v[0].toUpperCase() + v.slice(1)}
-                        </button>
-                    `)}
+                <div class="filtros">
+
+                    <div class="chips">
+                        ${L(["todas", "pendientes", "hechas"], v => `
+                            <button class="chb ${filtro === v ? "on" : ""}" onclick="A.fil('${v}')">
+                                ${v[0].toUpperCase() + v.slice(1)}
+                            </button>
+                        `)}
+                    </div>
+
+                    <div class="chips">
+                        ${L([
+                            ["todas", "Todas las fechas"],
+                            ["hoy", "Hoy"],
+                            ["semana", "Próximos 7 días"],
+                            ["vencidas", "Vencidas"]
+                        ], ([v, t]) => `
+                            <button class="chb ${filtroF === v ? "on" : ""}" onclick="A.filf('${v}')">
+                                ${t}
+                            </button>
+                        `)}
+                    </div>
+
+                    <label class="muted fecha">
+                        Buscar por fecha
+                        <input type="date" value="${fechaSel}" onchange="A.filf('fecha', this.value)">
+                    </label>
+
                 </div>
 
-                <ul class="lista">
+                <p class="cuenta">${l.length} ${l.length === 1 ? "tarea" : "tareas"}</p>
 
-                    ${L(l, ({ x, i }) => {
+                <div class="scroll">
 
-                        const v = !x.ok && x.f < HOY;
+                    <ul class="lista">
 
-                        return `
-                            <li class="${x.ok ? "hecha" : ""}">
+                        ${L(l, ({ x, i }) => {
 
-                                <input type="checkbox" ${x.ok ? "checked" : ""} onchange="A.tg(${i})" aria-label="Completar">
+                            const v = !x.ok && x.f < HOY;
 
-                                <div class="t">
+                            return `
+                                <li class="${x.ok ? "hecha" : ""}">
 
-                                    <b>${esc(x.t)}</b>
+                                    <input type="checkbox" ${x.ok ? "checked" : ""} onchange="A.tg(${i})" aria-label="Completar">
 
-                                    ${x.d ? `<small>${esc(x.d)}</small>` : ""}
+                                    <div class="t">
 
-                                    <small class="${v ? "rojo" : ""}">
-                                        📅 ${x.f}${v ? " · vencida" : ""}
-                                    </small>
+                                        <b>${esc(x.t)}</b>
 
-                                </div>
+                                        ${x.d ? `<small>${esc(x.d)}</small>` : ""}
 
-                                <span class="pr ${x.p}">${x.p}</span>
+                                        <small class="${v ? "rojo" : ""}">
+                                            📅 ${x.f}${v ? " · vencida" : ""}
+                                        </small>
 
-                                <button class="x" onclick="A.td(${i})" aria-label="Eliminar">🗑️</button>
+                                    </div>
 
-                            </li>
-                        `;
-                    }) || '<li class="vacio">No hay tareas aquí.</li>'}
+                                    <span class="pr ${x.p}">${x.p}</span>
 
-                </ul>
+                                    <button class="x" onclick="A.td(${i})" aria-label="Eliminar">🗑️</button>
+
+                                </li>
+                            `;
+                        }) || '<li class="vacio">No hay tareas con este filtro.</li>'}
+
+                    </ul>
+
+                </div>
 
             </section>
 
@@ -919,6 +1022,11 @@ const A = {
 
         selD = f;
 
+        // Mostrar el mes del día elegido
+        const d = new Date(f + "T00:00");
+
+        mes = new Date(d.getFullYear(), d.getMonth(), 1);
+
         render();
     },
 
@@ -957,6 +1065,11 @@ const A = {
         });
 
         selD = f.f.value;
+
+        // Mostrar el mes de la actividad que se acaba de agregar
+        const dd = new Date(selD + "T00:00");
+
+        mes = new Date(dd.getFullYear(), dd.getMonth(), 1);
 
         fin("Actividad agregada");
     },
@@ -1055,6 +1168,26 @@ const A = {
     fil(v) {
 
         filtro = v;
+
+        render();
+    },
+
+
+    // Filtrar tareas por fecha
+    filf(v, f) {
+
+        filtroF = v;
+
+        if (v === "fecha") {
+            fechaSel = f;
+
+            if (!f) {
+                filtroF = "todas";
+            }
+
+        } else {
+            fechaSel = "";
+        }
 
         render();
     },
